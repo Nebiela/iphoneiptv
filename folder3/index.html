@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>.PLAY iPTV</title>
+    <title>PLAY iPTV</title>
     <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest">
@@ -26,7 +26,7 @@
             --bg-nav: #161b22;
             --text-main: #ffffff;
             --text-sub: #8a96a3;
-            --ais-green: #faa22f;                  // ==================== เมนูสี ====================
+            --ais-green: #92c83e;
             --ais-green-glow: rgba(146, 200, 62, 0.35);
         }
         body {
@@ -69,7 +69,7 @@
         .brand-logo .logo-icon {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, #e03143 0%, #f03026 100%); // ==================== สีโลโก้ ====================
+            background: linear-gradient(135deg, #92c83e 0%, #6a9e2a 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -91,7 +91,7 @@
             position: absolute;
             width: 0;
             height: 0;
-            border-left: 12px solid #ed264a;
+            border-left: 12px solid #92c83e;
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
             margin-left: 2px;
@@ -124,7 +124,7 @@
         .brand-logo .logo-text .tv {
             font-size: 13px;
             font-weight: 700;
-            color: #ed264a;
+            color: #92c83e;
             letter-spacing: 4px;
             margin-top: -2px;
             text-shadow: 0 0 12px rgba(146, 200, 62, 0.2);
@@ -132,7 +132,7 @@
         .brand-logo .live-dot {
             width: 8px;
             height: 8px;
-            background: #97f032;         // ==================== สีจุดกระพริบ ====================
+            background: #ff2a54;
             border-radius: 50%;
             position: absolute;
             bottom: 2px;
@@ -859,13 +859,13 @@
                     <button onclick="setCategory('news', this)">ข่าวต่างประเทศ</button>
                     <button onclick="setCategory('sport', this)">กีฬาไทย</button>
                     <button onclick="setCategory('sport_intl', this)">กีฬาต่างประเทศ</button>
-                    <button onclick="setCategory('movie', this)">🎬ภาพยนตร์</button>
+                    <button onclick="setCategory('movie', this)">ภาพยนตร์</button>
                     <button onclick="setCategory('kids', this)">การ์ตูน</button>
-                    <button onclick="setCategory('จีน', this)">🎬 จีน</button>
-                    <button onclick="setCategory('เวียดนาม', this)">🎬 เวียดนาม</button>
-                    <button onclick="setCategory('เกาหลี', this)">🎬 เกาหลี</button>
-                    <button onclick="setCategory('อินเดีย', this)">🎬 อินเดีย/เอเชียใต้</button>
-                    <button onclick="setCategory('สารคดี', this)">🎬 สารคดี/ความรู้</button>
+                    <button onclick="setCategory('จีน', this)">📺 จีน</button>
+                    <button onclick="setCategory('เวียดนาม', this)">📺 เวียดนาม</button>
+                    <button onclick="setCategory('เกาหลี', this)">📺 เกาหลี</button>
+                    <button onclick="setCategory('อินเดีย', this)">📺 อินเดีย/เอเชียใต้</button>
+                    <button onclick="setCategory('สารคดี', this)">📺 สารคดี/ความรู้</button>
                     <button onclick="setCategory('ทีวีเขมร', this)">ทีวีเขมร</button>
                     <button onclick="setCategory('หนังใหม่2026', this)">หนังใหม่2026</button>
                     <button onclick="setCategory('wiseplay', this)">WISEPLAY</button>
@@ -890,7 +890,7 @@
             <div class="left-panel" id="leftPanel">
                 <div class="video-wrapper" id="videoWrapper">
                     <div class="play-overlay" id="playOverlay">
-                        <div class="big-icon">🎬</div>
+                        <div class="big-icon">▶</div>
                         <div class="brand-text">PLAY iPTV</div>
                     </div>
                     <div id="player-container">
@@ -1427,7 +1427,7 @@
                         nativeVideo.play().catch(() => {
                             nativeVideo.muted = false;
                             nativeVideo.play();
-                            showToast("👆 เปิด/ปิดเสียง");
+                            showToast("👆 คลิกที่หน้าจอเพื่อเปิดเสียง");
                         });
                     });
                 } else {
@@ -1459,101 +1459,5 @@
             }
         });
     </script>
-    <script>
-/* ==========================
-   ข้อมูลต้นฉบับ
-========================== */
-
-const PORTAL_URL = "https://playermov.iveenvon.workers.dev/";
-const MAC_ADDRESS = "00:11:22:33:44:55";
-
-/* ==========================
-   Base64
-========================== */
-
-const URL_BASE64 = "YUhSMGNEb3ZMMmx0WVc1d2IzTjBMbWRwZEdoMVlpNXBieTlwY0hSMmJtVjMv";
-const MAC_BASE64 = "MDA6MTE6MjI6MzM6NDQ6NTU=";
-
-/* ==========================
-   ถอดรหัส
-========================== */
-
-const CONFIG = {
-    p: atob(URL_BASE64),
-    m: atob(MAC_BASE64)
-};
-
-/* ==========================
-   ปิดคลิกขวา
-========================== */
-
-document.addEventListener("contextmenu", function(e){
-    e.preventDefault();
-    return false;
-});
-
-/* ==========================
-   ปิด F12 / DevTools Shortcut
-========================== */
-
-document.addEventListener("keydown", function(e){
-
-    if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey &&
-            ["I","J","C"].includes(e.key.toUpperCase())
-        ) ||
-        (e.ctrlKey && e.key.toUpperCase() === "U")
-    ){
-        e.preventDefault();
-        return false;
-    }
-
-});
-
-/* ==========================
-   ปิดลากรูป
-========================== */
-
-document.addEventListener("dragstart", function(e){
-    e.preventDefault();
-});
-
-/* ==========================
-   ปิดเลือกข้อความ
-========================== */
-
-document.addEventListener("selectstart", function(e){
-    e.preventDefault();
-});
-
-/* ==========================
-   ตรวจ DevTools
-========================== */
-
-setInterval(function(){
-
-    const widthThreshold =
-        window.outerWidth - window.innerWidth > 160;
-
-    const heightThreshold =
-        window.outerHeight - window.innerHeight > 160;
-
-    if(widthThreshold || heightThreshold){
-
-        document.body.innerHTML = `
-        <div style="
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            font-size:24px;
-            font-family:sans-serif;">
-            Access Denied
-        </div>`;
-    }
-
-},1000);
-</script>
 </body>
 </html>
