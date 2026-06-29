@@ -130,8 +130,8 @@
             text-shadow: 0 0 12px rgba(146, 200, 62, 0.2);
         }
         .brand-logo .live-dot {
-            width: 8px;
-            height: 8px;
+            width: 4px;
+            height: 4px;
             background: #09e87c;    /* สีจุดกระพริบ */
             border-radius: 50%;
             position: absolute;
@@ -854,21 +854,21 @@
             </div>
             <div class="category-container-top">
                 <div class="main-category-nav" id="mainCategoryNav">
-                    <button onclick="setCategory('all', this)" class="active">ทั้งหมด</button>
-                    <button onclick="setCategory('digital', this)">ทีวีไทย</button>
-                    <button onclick="setCategory('news', this)">ข่าวต่างประเทศ</button>
-                    <button onclick="setCategory('sport', this)">กีฬาไทย</button>
-                    <button onclick="setCategory('sport_intl', this)">กีฬาต่างประเทศ</button>
-                    <button onclick="setCategory('movie', this)">ภาพยนตร์</button>
-                    <button onclick="setCategory('kids', this)">การ์ตูน</button>
-                    <button onclick="setCategory('จีน', this)">📺 จีน</button>
-                    <button onclick="setCategory('เวียดนาม', this)">📺 เวียดนาม</button>
-                    <button onclick="setCategory('เกาหลี', this)">📺 เกาหลี</button>
-                    <button onclick="setCategory('อินเดีย', this)">📺 อินเดีย/เอเชียใต้</button>
-                    <button onclick="setCategory('สารคดี', this)">📺 สารคดี/ความรู้</button>
-                    <button onclick="setCategory('ทีวีเขมร', this)">ทีวีเขมร</button>
-                    <button onclick="setCategory('หนังใหม่2026', this)">หนังใหม่2026</button>
-                    <button onclick="setCategory('wiseplay', this)">WISEPLAY</button>
+                    <button onclick="setCategory('all', this)" class="active">🎬ทั้งหมด</button>
+                    <button onclick="setCategory('digital', this)">🎬ทีวีไทย</button>
+                    <button onclick="setCategory('news', this)">🎬ข่าวต่างประเทศ</button>
+                    <button onclick="setCategory('sport', this)">🎬กีฬาไทย</button>
+                    <button onclick="setCategory('sport_intl', this)">🎬กีฬาต่างประเทศ</button>
+                    <button onclick="setCategory('movie', this)">🎬ภาพยนตร์</button>
+                    <button onclick="setCategory('kids', this)">🎬การ์ตูน</button>
+                    <button onclick="setCategory('จีน', this)">🎬 จีน</button>
+                    <button onclick="setCategory('เวียดนาม', this)">🎬 เวียดนาม</button>
+                    <button onclick="setCategory('เกาหลี', this)">🎬 เกาหลี</button>
+                    <button onclick="setCategory('อินเดีย', this)">🎬 อินเดีย/เอเชียใต้</button>
+                    <button onclick="setCategory('สารคดี', this)">🎬 สารคดี/ความรู้</button>
+                    <button onclick="setCategory('ทีวีเขมร', this)">🎬ทีวีเขมร</button>
+                    <button onclick="setCategory('หนังใหม่2026', this)">🎬หนังใหม่2026</button>
+                    <button onclick="setCategory('wiseplay', this)">🎬WISEPLAY</button>
                 </div>
                 <div class="sub-category-nav" id="subCategoryNav">
                     <button onclick="setSubCategory('all', this)" class="active">ทั้งหมด</button>
@@ -1289,7 +1289,7 @@
                 card.onclick = (e) => { e.stopPropagation(); playChannel(ch, globalIdx); };
                 card.innerHTML = `
                         <div class="img-container">
-                            <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://img2.pic.in.th/media.png'">
+                            <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://static.vecteezy.com/system/resources/thumbnails/034/221/902/small/live-stream-label-badge-sign-flat-design-png.png'">
                             <div class="live-badge">🟢 สด</div>
                         </div>
                         <div class="info-bar"><span>${ch.name}</span></div>
