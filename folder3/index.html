@@ -69,7 +69,7 @@
         .brand-logo .logo-icon {
             width: 44px;
             height: 44px;
-            background: linear-gradient(135deg, #e03143 0%, #f03026 100%);
+            background: linear-gradient(135deg, #e03143 0%, #f03026 100%); // ==================== สีโลโก้ ====================
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -859,13 +859,13 @@
                     <button onclick="setCategory('news', this)">ข่าวต่างประเทศ</button>
                     <button onclick="setCategory('sport', this)">กีฬาไทย</button>
                     <button onclick="setCategory('sport_intl', this)">กีฬาต่างประเทศ</button>
-                    <button onclick="setCategory('movie', this)">ภาพยนตร์</button>
+                    <button onclick="setCategory('movie', this)">🎬ภาพยนตร์</button>
                     <button onclick="setCategory('kids', this)">การ์ตูน</button>
-                    <button onclick="setCategory('จีน', this)">📺 จีน</button>
-                    <button onclick="setCategory('เวียดนาม', this)">📺 เวียดนาม</button>
-                    <button onclick="setCategory('เกาหลี', this)">📺 เกาหลี</button>
-                    <button onclick="setCategory('อินเดีย', this)">📺 อินเดีย/เอเชียใต้</button>
-                    <button onclick="setCategory('สารคดี', this)">📺 สารคดี/ความรู้</button>
+                    <button onclick="setCategory('จีน', this)">🎬 จีน</button>
+                    <button onclick="setCategory('เวียดนาม', this)">🎬 เวียดนาม</button>
+                    <button onclick="setCategory('เกาหลี', this)">🎬 เกาหลี</button>
+                    <button onclick="setCategory('อินเดีย', this)">🎬 อินเดีย/เอเชียใต้</button>
+                    <button onclick="setCategory('สารคดี', this)">🎬 สารคดี/ความรู้</button>
                     <button onclick="setCategory('ทีวีเขมร', this)">ทีวีเขมร</button>
                     <button onclick="setCategory('หนังใหม่2026', this)">หนังใหม่2026</button>
                     <button onclick="setCategory('wiseplay', this)">WISEPLAY</button>
@@ -890,7 +890,7 @@
             <div class="left-panel" id="leftPanel">
                 <div class="video-wrapper" id="videoWrapper">
                     <div class="play-overlay" id="playOverlay">
-                        <div class="big-icon">🩸</div>
+                        <div class="big-icon">🎬</div>
                         <div class="brand-text">PLAY iPTV</div>
                     </div>
                     <div id="player-container">
@@ -899,8 +899,8 @@
                     </div>
                 </div>
                 <div class="wiseplay-banner" id="wiseplayBanner">
-                    <span class="wiseplay-logo">🎭</span>
-                    <div class="wiseplay-title">PLAYTV ^.^ WISEPLAY</div>
+                    <span class="wiseplay-logo">🎬</span>
+                    <div class="wiseplay-title">PLAY iPTV ^.^ WISEPLAY</div>
                     <div class="wiseplay-subtitle">กำลังเรียกเปิดสตรีมมิ่งผ่านแอปพลิเคชันภายนอกแบบเต็มจอ...</div>
                 </div>
             </div>
@@ -1290,7 +1290,7 @@
                 card.innerHTML = `
                         <div class="img-container">
                             <img src="${ch.logo}" alt="${ch.name}" onerror="this.src='https://img2.pic.in.th/media.png'">
-                            <div class="live-badge">🔴 สด</div>
+                            <div class="live-badge">🟢 สด</div>
                         </div>
                         <div class="info-bar"><span>${ch.name}</span></div>
                     `;
@@ -1427,7 +1427,7 @@
                         nativeVideo.play().catch(() => {
                             nativeVideo.muted = false;
                             nativeVideo.play();
-                            showToast("👆 คลิกที่หน้าจอเพื่อเปิดเสียง");
+                            showToast("👆 เปิด/ปิดเสียง");
                         });
                     });
                 } else {
