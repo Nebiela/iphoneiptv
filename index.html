@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<!-- saved from url=(0031)https://cambodiatv.netlify.app/ -->
+<html lang="th"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TV Live - ทีวีเขมร</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Player Container ===== */
+        #player-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            flex-shrink: 0;
+            aspect-ratio: 16 / 9;
+            max-height: 55vh;
+        }
+
+        #player-container video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #000;
+            object-fit: contain;
+        }
+
+        /* ===== โลโก้แบรนด์ มุมซ้ายบน (ห้ามเครื่องเล่น) ===== */
+        .brand-logo {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 6px 14px 6px 10px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .brand-logo svg {
+            width: 36px;
+            height: 36px;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .brand-logo .brand-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        .brand-logo .brand-text span {
+            color: #ff4444;
+        }
+
+        /* ===== ชื่อช่องด้านล่างซ้าย ===== */
+        .channel-name-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            pointer-events: none;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            border-left: 3px solid #ff4444;
+            backdrop-filter: blur(4px);
+            z-index: 5;
+        }
+
+        /* ===== Loading ===== */
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        #loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333;
+            border-top: 4px solid #ff4444;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        /* ================================================================
+           LAYOUT แนวนอน (Desktop/Tablet) - Player 70% ซ้าย, Sidebar 30% ขวา
+           ================================================================ */
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                background: #0a0a0a;
+            }
+
+            /* Player 70% */
+            #player-container {
+                width: 70%;
+                height: 100vh;
+                aspect-ratio: auto;
+                max-height: 100vh;
+                flex-shrink: 0;
+                order: 1;
+            }
+
+            /* Sidebar ขวา 30% — จัดเรียงแนวตั้ง: ชื่อหมวดหมู่บนสุด, รายการช่องด้านล่าง */
+            .sidebar {
+                width: 30%;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                background: #121212;
+                border-left: 1px solid #2a2a2a;
+                order: 2;
+                flex-shrink: 0;
+                overflow: hidden;
+            }
+
+            /* ชื่อหมวดหมู่ (หัวข้อ) อยู่บนสุด */
+            .sidebar-header {
+                flex-shrink: 0;
+                padding: 12px 16px 8px 16px;
+                background: #1a1a1a;
+                border-bottom: 1px solid #2a2a2a;
+                font-size: 16px;
+                font-weight: 700;
+                color: #fff;
+                letter-spacing: 0.5px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .sidebar-header span {
+                color: #ff4444;
+            }
+
+            /* Category Tabs อยู่ใต้หัวข้อ */
+            #category-tabs {
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                background: #1a1a1a;
+                padding: 8px 12px;
+                gap: 6px;
+                flex-shrink: 0;
+                border-bottom: 1px solid #2a2a2a;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                flex-wrap: nowrap;
+            }
+
+            #category-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-tab {
+                flex-shrink: 0;
+                padding: 5px 14px;
+                border-radius: 20px;
+                background: #2a2a2a;
+                color: #aaa;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 1px solid transparent;
+                white-space: nowrap;
+            }
+
+            .category-tab:active {
+                transform: scale(0.94);
+            }
+
+            .category-tab.active {
+                background: #ff4444;
+                color: #fff;
+                border-color: #ff4444;
+                box-shadow: 0 0 20px rgba(255, 68, 68, 0.25);
+            }
+
+            .category-tab:hover {
+                background: #3a3a3a;
+                color: #fff;
+            }
+
+            /* Channel List เติมพื้นที่ที่เหลือ */
+            #channel-list-container {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background: #121212;
+                padding: 6px 6px 12px 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #channel-list-container::-webkit-scrollbar {
+                width: 4px;
+            }
+            #channel-list-container::-webkit-scrollbar-track {
+                background: #1a1a1a;
+            }
+            #channel-list-container::-webkit-scrollbar-thumb {
+                background: #444;
+                border-radius: 4px;
+            }
+
+            .channel-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 5px;
+            }
+
+            .channel-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: #1e1e1e;
+                border-radius: 8px;
+                padding: 6px 3px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 2px solid transparent;
+                min-height: 58px;
+                text-align: center;
+            }
+
+            .channel-item:active {
+                transform: scale(0.94);
+            }
+
+            .channel-item.active {
+                border-color: #ff4444;
+                background: #2a1a1a;
+                box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
+            }
+
+            .channel-item img {
+                width: 32px;
+                height: 32px;
+                object-fit: contain;
+                border-radius: 6px;
+                background: #0a0a0a;
+                padding: 2px;
+                margin-bottom: 3px;
+            }
+
+            .channel-item .ch-name {
+                font-size: 9px;
+                font-weight: 500;
+                color: #ddd;
+                line-height: 1.2;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+
+            .channel-item .ch-category {
+                display: none;
+            }
+
+            /* ปรับโลโก้บนซ้ายให้เล็กในแนวนอน */
+            .brand-logo {
+                top: 10px;
+                left: 10px;
+                padding: 4px 12px 4px 8px;
+            }
+            .brand-logo svg {
+                width: 28px;
+                height: 28px;
+            }
+            .brand-logo .brand-text {
+                font-size: 13px;
+            }
+            .channel-name-overlay {
+                font-size: 12px;
+                padding: 4px 12px;
+                bottom: 10px;
+                left: 10px;
+            }
+        }
+
+        /* ===== Mobile Portrait ===== */
+        @media (max-width: 767px) {
+            #player-container {
+                max-height: 45vh;
+            }
+
+            .brand-logo {
+                top: 8px;
+                left: 8px;
+                padding: 4px 10px 4px 6px;
+            }
+            .brand-logo svg {
+                width: 28px;
+                height: 28px;
+            }
+            .brand-logo .brand-text {
+                font-size: 13px;
+            }
+
+            /* บนมือถือ แสดงหมวดหมู่และรายการช่องด้านล่างแบบปกติ */
+            #category-tabs {
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                background: #1a1a1a;
+                padding: 8px 12px;
+                gap: 8px;
+                flex-shrink: 0;
+                border-bottom: 1px solid #2a2a2a;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            #category-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .category-tab {
+                flex-shrink: 0;
+                padding: 6px 18px;
+                border-radius: 20px;
+                background: #2a2a2a;
+                color: #aaa;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 1px solid transparent;
+                white-space: nowrap;
+            }
+            .category-tab:active {
+                transform: scale(0.94);
+            }
+            .category-tab.active {
+                background: #ff4444;
+                color: #fff;
+                border-color: #ff4444;
+                box-shadow: 0 0 20px rgba(255, 68, 68, 0.25);
+            }
+
+            #channel-list-container {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background: #121212;
+                padding: 8px 6px 20px 6px;
+                min-height: 100px;
+                -webkit-overflow-scrolling: touch;
+            }
+            #channel-list-container::-webkit-scrollbar {
+                width: 4px;
+            }
+            #channel-list-container::-webkit-scrollbar-track {
+                background: #1a1a1a;
+            }
+            #channel-list-container::-webkit-scrollbar-thumb {
+                background: #444;
+                border-radius: 4px;
+            }
+
+            .channel-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 5px;
+            }
+
+            .channel-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: #1e1e1e;
+                border-radius: 8px;
+                padding: 5px 3px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 2px solid transparent;
+                min-height: 58px;
+                text-align: center;
+            }
+            .channel-item:active {
+                transform: scale(0.94);
+            }
+            .channel-item.active {
+                border-color: #ff4444;
+                background: #2a1a1a;
+                box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
+            }
+            .channel-item img {
+                width: 32px;
+                height: 32px;
+                object-fit: contain;
+                border-radius: 6px;
+                background: #0a0a0a;
+                padding: 2px;
+                margin-bottom: 3px;
+            }
+            .channel-item .ch-name {
+                font-size: 8.5px;
+                font-weight: 500;
+                color: #ddd;
+                line-height: 1.2;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            .channel-name-overlay {
+                font-size: 11px;
+                padding: 4px 10px;
+                bottom: 8px;
+                left: 8px;
+            }
+
+            /* บนมือถือไม่ต้องมี sidebar header */
+            .sidebar-header {
+                display: none;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            #player-container {
+                max-height: 50vh;
+            }
+            #channel-list-container {
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== Player 70% ซ้าย ===== -->
+    <div id="player-container">
+        <video id="videoPlayer" autoplay="" playsinline="" src="https://restream.pdtvhd.com/memfs/2dce569f-1c7d-4dbc-b1a4-d4e98bbc4818.m3u8"></video>
+
+        <!-- โลโก้แบรนด์ มุมซ้ายบน (ห้ามเครื่องเล่น) -->
+        <div class="brand-logo">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" fill="#ff4444"></circle>
+                <polygon points="38,30 38,70 72,50" fill="white"></polygon>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="white" stroke-width="2.5" opacity="0.3"></circle>
+                <circle cx="50" cy="50" r="32" fill="none" stroke="white" stroke-width="1.5" opacity="0.2"></circle>
+            </svg>
+            <span class="brand-text">TV<span>Live</span></span>
+        </div>
+
+        <!-- ชื่อช่อง -->
+        <div id="channel-name-overlay" class="channel-name-overlay">📺 HBO</div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <span>กำลังโหลด...</span>
+        </div>
+    </div>
+
+    <!-- ===== Sidebar ขวา 30% ===== -->
+    <div class="sidebar">
+        <!-- หัวข้อ "หมวดหมู่" อยู่บนสุด -->
+        <div class="sidebar-header">
+            <span>📂</span> หมวดหมู่ช่อง
+        </div>
+
+        <!-- Category Tabs -->
+        <div id="category-tabs"><div class="category-tab" data-category="ทั้งหมด">ทั้งหมด</div><div class="category-tab" data-category="กีฬา">กีฬา</div><div class="category-tab" data-category="เขมร">เขมร</div><div class="category-tab" data-category="ข่าว">ข่าว</div><div class="category-tab active" data-category="หนัง">หนัง</div><div class="category-tab" data-category="บันเทิง">บันเทิง</div><div class="category-tab" data-category="เพลง">เพลง</div><div class="category-tab" data-category="เด็ก">เด็ก</div><div class="category-tab" data-category="สารคดี">สารคดี</div><div class="category-tab" data-category="จีน">จีน</div><div class="category-tab" data-category="เกาหลี">เกาหลี</div><div class="category-tab" data-category="เวียดนาม">เวียดนาม</div></div>
+
+        <!-- Channel List -->
+        <div id="channel-list-container">
+            <div id="channelGrid" class="channel-grid"><div class="channel-item" data-index="63"><img src="./แอพ TV Live - ทีวีเขมร_files/16(1).png" alt="Netflix KH" loading="lazy"><span class="ch-name">Netflix KH</span></div><div class="channel-item" data-index="64"><img src="./แอพ TV Live - ทีวีเขมร_files/17.png" alt="Khmer Dub" loading="lazy"><span class="ch-name">Khmer Dub</span></div><div class="channel-item" data-index="65"><img src="./แอพ TV Live - ทีวีเขมร_files/18.png" alt="TVB" loading="lazy"><span class="ch-name">TVB</span></div><div class="channel-item" data-index="66"><img src="./แอพ TV Live - ทีวีเขมร_files/unnamed(2).png" alt="Sastra Film" loading="lazy"><span class="ch-name">Sastra Film</span></div><div class="channel-item" data-index="67"><img src="./แอพ TV Live - ทีวีเขมร_files/9.png" alt="Comedy" loading="lazy"><span class="ch-name">Comedy</span></div><div class="channel-item" data-index="68"><img src="./แอพ TV Live - ทีวีเขมร_files/14(1).png" alt="Chinese Film" loading="lazy"><span class="ch-name">Chinese Film</span></div><div class="channel-item" data-index="69"><img src="./แอพ TV Live - ทีวีเขมร_files/8.png" alt="A24" loading="lazy"><span class="ch-name">A24</span></div><div class="channel-item" data-index="70"><img src="./แอพ TV Live - ทีวีเขมร_files/Chinese-Drama.png" alt="Chinese Drama" loading="lazy"><span class="ch-name">Chinese Drama</span></div><div class="channel-item" data-index="71"><img src="./แอพ TV Live - ทีวีเขมร_files/Korean-Drama.png" alt="Korean Drama" loading="lazy"><span class="ch-name">Korean Drama</span></div><div class="channel-item" data-index="72"><img src="./แอพ TV Live - ทีวีเขมร_files/logo-(3).png" alt="sky one cinema 2" loading="lazy"><span class="ch-name">sky one cinema 2</span></div><div class="channel-item active" data-index="73"><img src="./แอพ TV Live - ทีวีเขมร_files/HBO.png" alt="HBO" loading="lazy"><span class="ch-name">HBO</span></div><div class="channel-item" data-index="74"><img src="./แอพ TV Live - ทีวีเขมร_files/HBO1.png" alt="HBO2" loading="lazy"><span class="ch-name">HBO2</span></div><div class="channel-item" data-index="75"><img src="./แอพ TV Live - ทีวีเขมร_files/Netflix-N.png" alt="NETFLIX" loading="lazy"><span class="ch-name">NETFLIX</span></div><div class="channel-item" data-index="76"><img src="./แอพ TV Live - ทีวีเขมร_files/AXN-MOVIE.png" alt="AXN MOVIE" loading="lazy"><span class="ch-name">AXN MOVIE</span></div><div class="channel-item" data-index="77"><img src="./แอพ TV Live - ทีวีเขมร_files/Star-Movies.png" alt="Star Movies" loading="lazy"><span class="ch-name">Star Movies</span></div><div class="channel-item" data-index="78"><img src="./แอพ TV Live - ทีวีเขมร_files/Cinema-HD.png" alt="CinemaHD1" loading="lazy"><span class="ch-name">CinemaHD1</span></div><div class="channel-item" data-index="79"><img src="./แอพ TV Live - ทีวีเขมร_files/Cinema-HD.png" alt="CinemaHD2" loading="lazy"><span class="ch-name">CinemaHD2</span></div><div class="channel-item" data-index="80"><img src="./แอพ TV Live - ทีวีเขมร_files/Rock-action.png" alt="Rock action" loading="lazy"><span class="ch-name">Rock action</span></div><div class="channel-item" data-index="81"><img src="./แอพ TV Live - ทีวีเขมร_files/b-ZWo-DTg.png" alt="CineSony" loading="lazy"><span class="ch-name">CineSony</span></div><div class="channel-item" data-index="82"><img src="./แอพ TV Live - ทีวีเขมร_files/30atvclassicmovies-u.png" alt="ATVClassicMovies" loading="lazy"><span class="ch-name">ATVClassicMovies</span></div><div class="channel-item" data-index="83"><img src="./แอพ TV Live - ทีวีเขมร_files/6.png.png" alt="CCTV6" loading="lazy"><span class="ch-name">CCTV6</span></div></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ข้อมูลช่องทั้งหมด (ครบทุกช่อง)
+        // ============================================================
+        const channels = [
+  { name: "TSN Sports", url: "https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8", logo: "https://i.postimg.cc/PJ6v4PvN/TSN-Sports.png", category: "กีฬา" },
+  { name: "Fox Sports", url: "https://cdn.pdtvhd.com/Sports/streams/FoxSports.m3u8", logo: "https://i.postimg.cc/0jvJ7n7w/Fox-Sports.png", category: "กีฬา" },
+  { name: "Record Sports", url: "https://cdn.pdtvhd.com/Sports/streams/CCTV5pul.m3u8", logo: "https://i.postimg.cc/Wb6Wd6MB/logo.png", category: "กีฬา" },
+  { name: "1001TV Sports", url: "https://cdn.pdtvhd.com/Sports/streams/1001TVSports.m3u8", logo: "https://i.postimg.cc/CKPKXWxy/logo-(4).png", category: "กีฬา" },
+  { name: "sporttv1", url: "https://live.eac-news.com/Sports/streams/sporttv1.m3u8", logo: "https://i.postimg.cc/0jdCH1KC/logo-(6).png", category: "กีฬา" },
+  { name: "beIN Sports1", url: "https://ip.pdtvhd.com/Sports/streams/beINSports.m3u8", logo: "https://i.postimg.cc/CxJQxk1Z/logo-(5).png", category: "กีฬา" },
+  { name: "ONE", url: "https://stream.pdtvhd.com/LiveApp/streams/ONEChampionship.m3u8", logo: "https://i.postimg.cc/Vvt8ZbDM/ONE.png", category: "กีฬา" },
+  { name: "TRT1 Sports", url: "https://live.eac-news.com/Sports/streams/Trt1.m3u8", logo: "https://i.postimg.cc/tTp3b8SD/logo.png", category: "กีฬา" },
+  { name: "Sky Sport", url: "https://restream.pdtvhd.com/memfs/191b4b12-fa6b-4507-93d9-2b1dac47efc4.m3u8", logo: "https://i.postimg.cc/YCgBHY0y/5.png", category: "กีฬา" },
+  { name: "Skysportfootball", url: "https://restream.pdtvhd.com/memfs/c20b216f-8db2-43c7-b90d-da3082765ca0.m3u8", logo: "https://i.postimg.cc/8CBGBTfs/skysportfootball.png", category: "กีฬา" },
+  { name: "laliga Sport", url: "https://restream.pdtvhd.com/memfs/a2e31d6c-c858-46c4-a3e1-e5bc2844bcdf.m3u8", logo: "https://i.postimg.cc/Twpk296k/laliga.png", category: "กีฬา" },
+  { name: "TyC Sports", url: "https://amg26268-amg26268c14-freelivesports-emea-10267.playouts.now.amagi.tv/ts-us-e2-n2/playlist/amg26268-sportsstudio-tycsports-freelivesportsemea/playlist.m3u8", logo: "https://i.postimg.cc/XqThxgHf/Ty-C-Sports.png", category: "กีฬา" },
+  { name: "Redbull", url: "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master_6660.m3u8", logo: "https://i.postimg.cc/X7HBDbP7/Redbull.png", category: "กีฬา" },
+  { name: "CCTV5", url: "https://live.dtvhd.com/CCTV/streams/cctv5plus.m3u8", logo: "https://i.postimg.cc/fRzdbSf2/6.png.png", category: "กีฬา" },
+  { name: "CCTV16", url: "https://live.dtvhd.com/CCTV/streams/cctv16.m3u8", logo: "https://i.postimg.cc/rpWqXQtd/16.png", category: "กีฬา" },
+
+  { name: "TVK", url: "https://live.kh.malimarcdn.com/live/tvk.stream/chunklist.m3u8", logo: "https://i.postimg.cc/xds5mfzX/kkkk.png", category: "เขมร" },
+  { name: "TVK 2", url: "https://live.kh.malimarcdn.com/live/tvk2.stream/chunklist.m3u8", logo: "https://i.postimg.cc/9FWD6GSM/2222.png", category: "เขมร" },
+  { name: "BTV", url: "https://live.happywatch99.com/btv/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/mrt0X6hX/BTV.png", category: "เขมร" },
+  { name: "Bayon", url: "https://live.happywatch99.com/bayon/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/9MP1JGP6/BAYON-TV-LOGO.png", category: "เขมร" },
+  { name: "CTN", url: "https://live.eac-news.com/Khmer/streams/CTNHD.m3u8", logo: "https://i.imgur.com/r523kOq.png", category: "เขมร" },
+  { name: "CNC", url: "https://live.eac-news.com/Khmer/streams/CNCHD.m3u8", logo: "https://i.postimg.cc/3Nd17P5P/cnc.jpg", category: "เขมร" },
+  { name: "MyTV", url: "https://live.eac-news.com/Khmer/streams/MYTV.m3u8", logo: "https://i.postimg.cc/Nj76hg2h/13-400-import.png", category: "เขมร" },
+  { name: "Town HD", url: "https://live.eac-news.com/Khmer/streams/TOWNHD.m3u8", logo: "https://i.postimg.cc/2yhLkdGT/c312928b2c77-640-360.png", category: "เขมร" },
+  { name: "ITV HD", url: "https://live.eac-news.com/Khmer/streams/ITVHD.m3u8", logo: "https://i.postimg.cc/ZK6MdXfZ/logo-(4).png", category: "เขมร" },
+  { name: "Apsara", url: "https://live.eac-news.com/Khmer/streams/Apsara.m3u8", logo: "https://i.imgur.com/9wJe71I.png", category: "เขมร" },
+  { name: "TV5", url: "https://live.eac-news.com/Khmer/streams/TV5HD.m3u8", logo: "https://i.imgur.com/iMZLyoX.png", category: "เขมร" },
+  { name: "CTV8", url: "https://live.eac-news.com/Khmer/streams/CTV8HD.m3u8", logo: "https://i.imgur.com/yrdr4Po.png", category: "เขมร" },
+  { name: "CTV9", url: "https://stream.pdtvhd.com/live/streams/ctv9_hd_playlist.m3u8", logo: "https://i.postimg.cc/SQCbRw14/CTV9-logo.png", category: "เขมร" },
+  { name: "SEATV", url: "https://seatv.netlinkbroadcaster.com/hls/test.m3u8", logo: "https://i.postimg.cc/Y9wz1SP4/SEATV.png", category: "เขมร" },
+  { name: "MSJ TV", url: "https://live.dtvhd.com/LiveApp/streams/MSJTV_hd_playlist.m3u8", logo: "https://i.postimg.cc/ZKBq1ncm/logomsj.png", category: "เขมร" },
+  { name: "PNN", url: "https://live.dtvhd.com/live/streams/PNNHD.m3u8", logo: "https://i.postimg.cc/PrzgrXXs/logo-(1).png", category: "เขมร" },
+  { name: "NTV", url: "https://stream.pdtvhd.com/LiveApp/streams/ntvhda.dtvhd.com.m3u8", logo: "https://i.postimg.cc/DwGTZj30/NTV.png", category: "เขมร" },
+  { name: "MoINFO", url: "https://restream.pdtvhd.com/memfs/309a68d6-96a1-498e-85ed-ec0bbf1ef5f6.m3u8", logo: "https://i.postimg.cc/m2cVfK7h/Mo-INFO.png", category: "เขมร" },
+  { name: "MOI TV", url: "https://restream.pdtvhd.com/memfs/580d5798-ae3c-4330-931e-48261933130d.m3u8", logo: "https://i.postimg.cc/G28Jwyyp/MOI-TV.png", category: "เขมร" },
+  { name: "ABC Cambodia", url: "https://ip.pdtvhd.com/LiveApp/streams/ABCCambodia.m3u8", logo: "https://i.postimg.cc/qMvkwxVy/photo-2024-06-03-07-51-59.png", category: "เขมร" },
+  { name: "Khmer TV", url: "https://livefta.malimarcdn.com/ftaedge00/khmertv2020.stream/chunklist.m3u8", logo: "https://i.postimg.cc/mDjv1Krj/1.png", category: "เขมร" },
+  { name: "SHS TV", url: "https://live.happywatch99.com/shshdtv/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/DZ9F36FV/14.png", category: "เขมร" },
+  { name: "CHAMBER TV", url: "https://live.happywatch99.com/ccochdtv/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/9Qd25Zg6/13.png", category: "เขมร" },
+  { name: "PP Digital TV", url: "https://live.happywatch99.com/ppdhdtv/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/1544QCDb/12.png", category: "เขมร" },
+  { name: "CA TV", url: "https://live.happywatch99.com/kaahdtv/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/1XQTKjsZ/15.png", category: "เขมร" },
+  { name: "ARDB TV", url: "https://ardbtv.ardb.com.kh:8443/tv-live/tv-online_1080p.m3u8", logo: "https://i.postimg.cc/vTyPFx1b/4.png", category: "เขมร" },
+  { name: "KPS99TV", url: "https://restream.pdtvhd.com/memfs/42e9e6bf-80b9-46c2-b59b-d6b501d82918.m3u8", logo: "https://i.postimg.cc/RVQ462wf/6.png", category: "เขมร" },
+
+  { name: "Fresh News", url: "https://live.dtvhd.com/NEWS/streams/FreshNewsHD.m3u8", logo: "https://i.postimg.cc/6QqYthbL/unnamed.png", category: "ข่าว" },
+  { name: "EAC News", url: "https://live.eac-news.com/LiveApp/streams/eacnews.m3u8", logo: "https://i.postimg.cc/sXyx5nFy/5.png", category: "ข่าว" },
+  { name: "Sbm News", url: "https://restream.pdtvhd.com/memfs/87527b47-c03d-4e5c-a61f-33e47c8a99df.m3u8", logo: "https://i.postimg.cc/JnfKHgwq/New-Project.png", category: "ข่าว" },
+  { name: "News Asia", url: "https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8", logo: "https://i.postimg.cc/fWJ80ZsD/unnamed.png", category: "ข่าว" },
+  { name: "CNN", url: "https://turnerlive.warnermediacdn.com/hls/live/586495/cnngo/cnn_slate/VIDEO_0_3564000.m3u8", logo: "https://i.postimg.cc/HncJBrLy/images-1-removebg-preview.png", category: "ข่าว" },
+  { name: "Sky News", url: "https://linear417-gb-hls1-prd-ak.cdn.skycdp.com/100e/Content/HLS_001_1080_30/Live/channel(skynews)/index_1080-30.m3u8", logo: "https://i.postimg.cc/yYTK2VSr/6.png", category: "ข่าว" },
+  { name: "Fox News", url: "https://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8", logo: "https://i.postimg.cc/gJMk9m7S/3.png", category: "ข่าว" },
+  { name: "NHK World", url: "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8", logo: "https://i.postimg.cc/qvdr5NRJ/4.png", category: "ข่าว" },
+  { name: "City News", url: "https://citynewsregional.akamaized.net/hls/live/1024052/Regional_Live_7/Video-1Mbps.m3u8", logo: "https://i.postimg.cc/mgq55qVn/7.png", category: "ข่าว" },
+  { name: "Al Jazeera", url: "https://live-hls-web-aje-gcp.thehlive.com/AJE/03.m3u8", logo: "https://i.postimg.cc/3r4HrX0T/free-aljazeera-logo-icon-svg-download-png-461765.webp", category: "ข่าว" },
+  { name: "NBC 5", url: "https://d1bl6tskrpq9ze.cloudfront.net/hls/master.m3u8?ads.xumo_channelId=99984003", logo: "https://i.postimg.cc/hPXRj9J1/NBC-5-removebg-preview.png", category: "ข่าว" },
+  { name: "CGTN", url: "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8", logo: "https://i.postimg.cc/1zn8rgY5/images-2-removebg-preview.png", category: "ข่าว" },
+  { name: "TVRI World", url: "https://ott-balancer.tvri.go.id/live/eds/TVRIWorld/hls/TVRIWorld.m3u8", logo: "https://i.postimg.cc/d1hjdtG8/channels4-profile-(1).jpg", category: "ข่าว" },
+  { name: "RT News", url: "https://rt-glb.rttv.com/live/rtnews/playlist_4500Kb.m3u8", logo: "https://i.postimg.cc/cHRPpmbq/Russia-today-logo-svg.png", category: "ข่าว" },
+  { name: "TRT WORLD", url: "https://tv-trtworld.medya.trt.com.tr/master_1080.m3u8", logo: "https://i.postimg.cc/T3T1F779/TRT-World-Radio-logo-svg.png", category: "ข่าว" },
+  { name: "DW NEWS", url: "https://dwamdstream102.akamaized.net/hls/live/2015525-b/dwstream102/stream05/streamPlaylist.m3u8", logo: "https://i.postimg.cc/MT2D8JCT/8-removebg-preview.png", category: "ข่าว" },
+  { name: "TV5 Monde", url: "https://ott.tv5monde.com/Content/HLS/Live/channel(info)/variant.m3u8", logo: "https://i.postimg.cc/8Cqvrd4m/mobile-app-icon-new.webp", category: "ข่าว" },
+  { name: "CCTV Plus", url: "https://cd-live-stream.news.cctvplus.com/live/smil:CHANNEL1.smil/playlist.m3u8", logo: "https://i.postimg.cc/9F3xjZj4/7.png", category: "ข่าว" },
+  { name: "CNBC", url: "https://cdn-uk3-eu.lncnetworks.host/hls/cnbc_live/index.m3u8", logo: "https://i.postimg.cc/HsBTNpqj/png-clipart-cnbc-logo-of-nbc-television-others-miscellaneous-television-removebg-preview.png", category: "ข่าว" },
+  { name: "France 24", url: "https://live-evg8.tv360.metfone.com.kh/manifest/France24-sd/playlist_480p1p1.m3u8", logo: "https://i.postimg.cc/Bvtbp8bz/images-(1).png", category: "ข่าว" },
+  { name: "CCTV13", url: "https://live.dtvhd.com/CCTV/streams/cctv13.m3u8", logo: "https://i.postimg.cc/wT6M58RX/13.png", category: "ข่าว" },
+
+  { name: "Netflix KH", url: "https://live.dtvhd.com/live/streams/Netflix.Dtvhd.com.m3u8", logo: "https://i.postimg.cc/sD0mjNqj/16.png", category: "หนัง" },
+  { name: "Khmer Dub", url: "https://stream.pdtvhd.com/LiveApp/streams/AGGMovieHD.tv360.metfone.m3u8", logo: "https://i.postimg.cc/MKkR9JCD/17.png", category: "หนัง" },
+  { name: "TVB", url: "https://stream.pdtvhd.com/LiveApp/streams/TVBHD.m3u8", logo: "https://i.postimg.cc/1z4f9Wxr/18.png", category: "หนัง" },
+  { name: "Sastra Film", url: "https://stream.pdtvhd.com/LiveApp/streams/SastrafilmHD.m3u8", logo: "https://i.postimg.cc/L8Q80zJw/unnamed.png", category: "หนัง" },
+  { name: "Comedy", url: "https://live.dtvhd.com/live/streams/CanDYHD.Dtvhd.com.m3u8", logo: "https://i.postimg.cc/0yMnH1Zm/9.png", category: "หนัง" },
+  { name: "Chinese Film", url: "https://live-evg19.tv360.metfone.com.kh/hls/hls-cambodia/playlist.m3u8", logo: "https://i.postimg.cc/7hnbmhJs/14.png", category: "หนัง" },
+  { name: "A24", url: "https://live-evg3.tv360.metfone.com.kh/live_hq/13_metfone_film/chunks.m3u8", logo: "https://i.postimg.cc/SNnJcTTP/8.png", category: "หนัง" },
+  { name: "Chinese Drama", url: "https://live.dtvhd.com/live/streams/ChineseDrama.m3u8", logo: "https://i.postimg.cc/m2sJhzHn/Chinese-Drama.png", category: "หนัง" },
+  { name: "Korean Drama", url: "https://live.dtvhd.com/live/streams/KoreanDrama.m3u8", logo: "https://i.postimg.cc/wB7bnDCc/Korean-Drama.png", category: "หนัง" },
+  { name: "sky one cinema 2", url: "https://live.happywatch99.com/rhm/0c00b89a106bb365ec031b28fa3ae499.sdp/playlist.m3u8", logo: "https://i.postimg.cc/xdhxPCGv/logo-(3).png", category: "หนัง" },
+  { name: "HBO", url: "https://restream.pdtvhd.com/memfs/2dce569f-1c7d-4dbc-b1a4-d4e98bbc4818.m3u8", logo: "https://i.postimg.cc/R0wq0jFR/HBO.png", category: "หนัง" },
+  { name: "HBO2", url: "https://restream.pdtvhd.com/memfs/526d5297-1392-49af-8538-3e73d48846b0.m3u8", logo: "https://i.postimg.cc/8zMTdLSN/HBO1.png", category: "หนัง" },
+  { name: "NETFLIX", url: "https://restream.pdtvhd.com/memfs/1e857e71-d00c-4b27-8152-9910bf55b48b.m3u8", logo: "https://i.postimg.cc/SQnR22JQ/Netflix-N.png", category: "หนัง" },
+  { name: "AXN MOVIE", url: "https://live.pdtvhd.com/live/streams/axnmovie.m3u8", logo: "https://i.postimg.cc/rw6bT7rK/AXN-MOVIE.png", category: "หนัง" },
+  { name: "Star Movies", url: "https://restream.pdtvhd.com/memfs/12e0742d-8262-44ba-aa3c-8317dbd35ac4.m3u8", logo: "https://i.postimg.cc/pdnWpf6Z/Star-Movies.png", category: "หนัง" },
+  { name: "CinemaHD1", url: "https://live.pdtvhd.com/live/streams/cinemaworld1.m3u8", logo: "https://i.postimg.cc/Fs591CtG/Cinema-HD.png", category: "หนัง" },
+  { name: "CinemaHD2", url: "https://live.pdtvhd.com/live/streams/cinemaworld2.m3u8", logo: "https://i.postimg.cc/Fs591CtG/Cinema-HD.png", category: "หนัง" },
+  { name: "Rock action", url: "https://live.pdtvhd.com/live/streams/rockaction.m3u8", logo: "https://i.postimg.cc/Wz2c6C23/Rock-action.png", category: "หนัง" },
+  { name: "CineSony", url: "https://a-cdn.klowdtv.com/live1/cine_720p/chunks.m3u8", logo: "https://i.postimg.cc/wMKw6k85/b-ZWo-DTg.png", category: "หนัง" },
+  { name: "ATVClassicMovies", url: "https://30a-tv.com/feeds/pzaz/30atvmovies.m3u8", logo: "https://i.postimg.cc/ZKnWbzHN/30atvclassicmovies-u.png", category: "หนัง" },
+  { name: "CCTV6", url: "https://live.dtvhd.com/CCTV/streams/cctv6.m3u8", logo: "https://i.postimg.cc/fRzdbSf2/6.png.png", category: "หนัง" },
+
+  { name: "Wiki TV", url: "https://stream.wikitv.asia/live/ngrp:myStream_all/playlist.m3u8", logo: "https://i.postimg.cc/sgk4CRWN/unnamed-(1).png", category: "บันเทิง" },
+  { name: "EBC Education", url: "https://restream.pdtvhd.com/memfs/be1f3bfe-a36a-4d6d-8e47-d43a1c316a04.m3u8", logo: "https://i.postimg.cc/YqLRBnzf/New-Project.png", category: "บันเทิง" },
+  { name: "ASIA", url: "https://stream.mekongtv.net/livemp4/B2BChannel.stream/chunklist_w1580825333.m3u8", logo: "https://i.postimg.cc/wBcmKBhZ/logo.png", category: "บันเทิง" },
+  { name: "Netlink", url: "https://netlink.netlinkbroadcaster.com/hls/test.m3u8", logo: "https://i.postimg.cc/0NMTfmRP/9.png", category: "บันเทิง" },
+  { name: "Sabay one 1", url: "https://live.happywatch99.com/hangmeas/0c00b89a106bb365ec031b28fa3ae499.sdp/chunks.m3u8", logo: "https://i.postimg.cc/59CcDc6H/logo-(2).png", category: "บันเทิง" },
+  { name: "lotus", url: "https://live.pdtvhd.com/live/streams/lotus.m3u8", logo: "https://i.postimg.cc/V6qKgN6k/lotus.png", category: "บันเทิง" },
+  { name: "Rock Entertainment", url: "https://live.pdtvhd.com/live/streams/rockentertainment.m3u8", logo: "https://i.postimg.cc/N0m0NhwG/Rock-Entertainment.png", category: "บันเทิง" },
+  { name: "Animax Asia", url: "https://live.pdtvhd.com/live/streams/animaxasia.m3u8", logo: "https://i.postimg.cc/Y90L04BQ/animax.png", category: "บันเทิง" },
+
+  { name: "Top Music", url: "https://stream.pdtvhd.com/LiveApp/streams/AGGMusicHD.tv360.metfone.m3u8", logo: "https://i.postimg.cc/L81tH6zH/unnamed.png", category: "เพลง" },
+  { name: "Kpop Mix", url: "https://restream.pdtvhd.com/memfs/13796778-949e-4628-b63b-e50c2bbeb6a6.m3u8", logo: "https://i.postimg.cc/3RfM3BTm/5.png", category: "เพลง" },
+  { name: "Kpop Play", url: "https://restream.pdtvhd.com/memfs/003aaadb-6919-4654-9982-29292642d9d8.m3u8", logo: "https://i.postimg.cc/wjjhmQ86/3.png", category: "เพลง" },
+  { name: "KPop", url: "https://restream.pdtvhd.com/memfs/b6ff2d09-e470-438f-b2e3-b96d1e39d7fc.m3u8", logo: "https://i.postimg.cc/d00SbYVk/B7ILXMc.png", category: "เพลง" },
+  { name: "CCTV15", url: "https://live.dtvhd.com/CCTV/streams/cctv15.m3u8", logo: "https://i.postimg.cc/v8pTRLQw/15.png", category: "เพลง" },
+
+  { name: "Cartoon Network", url: "https://live.pdtvhd.com/live/streams/cartoonnetwork.m3u8", logo: "https://i.postimg.cc/8kjy9vZH/12.png", category: "เด็ก" },
+  { name: "ZooMoo Kids", url: "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01553-blueantmediaasi-zoomoonz-samsungnz/playlist.m3u8", logo: "https://i.postimg.cc/FHb38Cyy/2.png", category: "เด็ก" },
+  { name: "Cartoonito", url: "https://live.pdtvhd.com/live/streams/cartoonito.m3u8", logo: "https://i.postimg.cc/m28NknPP/logo-(1).png", category: "เด็ก" },
+  { name: "CCTV14", url: "https://live.dtvhd.com/CCTV/streams/cctv14.m3u8", logo: "https://i.postimg.cc/c6qVDJyk/14.png", category: "เด็ก" },
+
+  { name: "Wild Earth", url: "https://restream.pdtvhd.com/memfs/9d8ab217-94af-467e-9e52-cdc125b99ccd.m3u8", logo: "https://i.postimg.cc/gjv3pgCs/3.png", category: "สารคดี" },
+  { name: "NAT GEO", url: "https://restream.pdtvhd.com/memfs/0c075e85-d9f0-448e-b839-d2270d811f58.m3u8", logo: "https://i.postimg.cc/C5NdJ9T0/4.png", category: "สารคดี" },
+  { name: "LOVENATURE", url: "https://restream.pdtvhd.com/memfs/9e6205cb-2c2c-41ed-a7e5-831ccaade4d1.m3u8", logo: "https://i.postimg.cc/d3TP3CB3/logo-(2).png", category: "สารคดี" },
+  { name: "History", url: "https://server.dtvhd.com/memfs/10a390b8-be4c-4d95-a0c3-06bdf70b0193.m3u8", logo: "https://i.postimg.cc/xdsv1SB3/History.png", category: "สารคดี" },
+
+  { name: "CCTV1", url: "https://live.dtvhd.com/CCTV/streams/cctv1.m3u8", logo: "https://i.postimg.cc/hGGV2QJ8/cctv1.png", category: "จีน" },
+  { name: "CCTV2", url: "https://live.dtvhd.com/CCTV/streams/cctv2.m3u8", logo: "https://i.postimg.cc/wMP69HKn/CCTV2.png", category: "จีน" },
+  { name: "CCTV4", url: "https://live.dtvhd.com/CCTV/streams/cctv4.m3u8", logo: "https://i.postimg.cc/QdcXZRfM/CCTV4.png", category: "จีน" },
+  { name: "CCTV7", url: "https://live.dtvhd.com/CCTV/streams/cctv7.m3u8", logo: "https://i.postimg.cc/k5cqBW3C/CCTV7.png", category: "จีน" },
+  { name: "CCTV8", url: "https://live.dtvhd.com/CCTV/streams/cctv8.m3u8", logo: "https://i.postimg.cc/m2wcK2GW/8.png.png", category: "จีน" },
+  { name: "CCTV9", url: "https://xykt-fix.github.io/Y77.m3u8", logo: "https://i.postimg.cc/dVNhtH13/9.png.png", category: "จีน" },
+  { name: "CCTV10", url: "https://live.dtvhd.com/CCTV/streams/cctv10.m3u8", logo: "https://i.postimg.cc/T1ZXZ9mN/CCTV10.png", category: "จีน" },
+  { name: "CCTV11", url: "https://live.dtvhd.com/CCTV/streams/cctv11.m3u8", logo: "https://i.postimg.cc/R0Mz5q3Y/11.png", category: "จีน" },
+  { name: "CCTV12", url: "https://live.dtvhd.com/CCTV/streams/cctv12.m3u8", logo: "https://i.postimg.cc/ydx4x5yL/12.png", category: "จีน" },
+  { name: "CCTV17", url: "https://live.dtvhd.com/CCTV/streams/cctv17.m3u8", logo: "https://i.postimg.cc/qRx0gqLX/17.png", category: "จีน" },
+  { name: "安徽卫视", url: "https://restream.pdtvhd.com/memfs/d708f434-d0c7-47aa-a1e5-772c430dc096.m3u8", logo: "https://i.postimg.cc/Xq0P7V0s/an-hui-wei-shi.png", category: "จีน" },
+  { name: "重庆卫视", url: "https://restream.pdtvhd.com/memfs/0dd83d9b-19fe-4eef-a046-69b56018ff26.m3u8", logo: "https://i.postimg.cc/Z5y6j6d1/chong-qing-wei-shi.png", category: "จีน" },
+  { name: "贵州卫视", url: "https://restream.pdtvhd.com/memfs/2462627a-7291-48d8-bf59-64ef1220d6e5.m3u8", logo: "https://i.postimg.cc/SsQ209nf/gui-zhou-wei-shi.png", category: "จีน" },
+  { name: "甘肃卫视", url: "https://restream.pdtvhd.com/memfs/72c4e783-731e-4a2d-955b-b02fc2b59b32.m3u8", logo: "https://i.postimg.cc/ZqHnLqw6/gan-su-wei-shi.png", category: "จีน" },
+  { name: "湖北卫视", url: "https://restream.pdtvhd.com/memfs/f6d29cbc-8d99-498d-ae7b-53412c38c53e.m3u8", logo: "https://i.postimg.cc/HkCLDMKJ/hu-bei-wei-shi.png", category: "จีน" },
+  { name: "河北卫视", url: "https://restream.pdtvhd.com/memfs/a1823320-774d-49f2-be5b-e166532f065e.m3u8", logo: "https://i.postimg.cc/6pwGVFBZ/he-bei-wei-shi.png", category: "จีน" },
+  { name: "广西卫视", url: "https://restream.pdtvhd.com/memfs/8c54d323-6807-4925-9fac-d60dc533f8df.m3u8", logo: "https://i.postimg.cc/PrHq0Z0f/guang-xi-wei-shi.png", category: "จีน" },
+  { name: "东方卫视", url: "https://restream.pdtvhd.com/memfs/c3c500dd-3e83-475f-b18f-9aa29718e177.m3u8", logo: "https://i.postimg.cc/8PwT3Yhx/dong-fang-wei-shi.png", category: "จีน" },
+
+  { name: "BBS TV", url: "https://restream.pdtvhd.com/memfs/5c7a14f8-7f96-4616-9243-a6543fb6c7f7.m3u8", logo: "https://i.postimg.cc/NjWSP8PS/BBS-TV.png", category: "เกาหลี" },
+  { name: "TBS TV", url: "https://cdntv.tbs.seoul.kr/tbs/tbs_tv_web.smil/playlist.m3u8", logo: "https://i.postimg.cc/W3rrjZjb/TBS.png", category: "เกาหลี" },
+  { name: "NBS", url: "https://media.joycorp.co.kr:4443/live/ngrp:live_all/chunklist_w1643157688_b1349152.m3u8", logo: "https://i.postimg.cc/QtnPLR8F/NBS.png", category: "เกาหลี" },
+  { name: "EBS 1TV", url: "https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/chunklist.m3u8", logo: "https://i.postimg.cc/N0PqYybQ/EBS-1TV.png", category: "เกาหลี" },
+  { name: "EBS 2TV", url: "https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/chunklist.m3u8", logo: "https://i.postimg.cc/NFjHXzmX/EBS-2TV.png", category: "เกาหลี" },
+  { name: "EBSEnglish", url: "https://ebsonair.ebs.co.kr/plus3familypc/familypc1m/chunklist.m3u8", logo: "https://i.postimg.cc/c48JzWxK/EBSEnglish.png", category: "เกาหลี" },
+  { name: "EBSPlus1", url: "https://ebsonair.ebs.co.kr/plus1familypc/familypc1m/chunklist.m3u8", logo: "https://i.postimg.cc/V6CCWCHh/EBSPlus1.png", category: "เกาหลี" },
+  { name: "EBSPlus2", url: "https://ebsonair.ebs.co.kr/plus2familypc/familypc1m/chunklist.m3u8", logo: "https://i.postimg.cc/XJfvvcPn/EBSPlus2.png", category: "เกาหลี" },
+  { name: "OUN", url: "https://restream.pdtvhd.com/memfs/c2fc842e-1c95-406c-bada-d24fd843cc73.m3u8", logo: "https://i.postimg.cc/KzJdQ1kP/OUN.png", category: "เกาหลี" },
+
+  { name: "HTVKey", url: "https://liveh12.vtvprime.vn/hls/HTVKey/index.m3u8", logo: "https://i.postimg.cc/ZKBM8jr2/HTVKey.png", category: "เวียดนาม" },
+  { name: "DongNaiTV2", url: "https://restream.pdtvhd.com/memfs/5e52bf3f-1809-4bc7-8ee6-fa745e8cc060.m3u8", logo: "https://i.postimg.cc/RZqK6bK1/Dong-Nai-TV2.png", category: "เวียดนาม" },
+  { name: "HTV4", url: "https://liveh12.vtvprime.vn/hls/HTVKey/index.m3u8", logo: "https://i.postimg.cc/PxJBBHw5/Logo-HTV4.png", category: "เวียดนาม" },
+  { name: "CaoBangTV", url: "https://stream.thingnet.vn/live/smil:CRTV.smil/chunklist_w600847222_b1384000.m3u8", logo: "https://i.postimg.cc/d34nvZPf/Cao-Bang-TV.png", category: "เวียดนาม" },
+  { name: "DaNangTV1", url: "https://restream.pdtvhd.com/memfs/e1e63131-d6b2-4548-a771-113fa13ad555.m3u8", logo: "https://i.postimg.cc/mkvkP8sy/Da-Nang-TV1.png", category: "เวียดนาม" },
+  { name: "DaNangTV2", url: "https://livetv.mylifeisgood.net.ru/channels/startlive.m3u8", logo: "https://i.postimg.cc/gJqWWpzS/Da-Nang-TV2.png", category: "เวียดนาม" },
+  { name: "DienBienTV", url: "https://liveh34.vtvprime.vn/hls/DONGTHAPTV/03.m3u8", logo: "https://i.postimg.cc/d34nvZPf/Cao-Bang-TV.png", category: "เวียดนาม" },
+  { name: "DongThapTV", url: "https://liveh34.vtvprime.vn/hls/DONGTHAPTV/index.m3u8", logo: "https://i.postimg.cc/0NHzgpNd/Dong-Thap-TV.png", category: "เวียดนาม" },
+  { name: "HanoiTV1", url: "https://restream.pdtvhd.com/memfs/a033568e-f967-4d94-8f98-00774bd93e8b.m3u8", logo: "https://i.postimg.cc/BbZ8gMCR/Je3K25E.png", category: "เวียดนาม" },
+  { name: "HanoiTV2", url: "https://liveh34.vtvprime.vn/hls/DONGTHAPTV/index.m3u8", logo: "https://i.postimg.cc/BbwvCst9/szivqh2.png", category: "เวียดนาม" }
+];
+
+        // ============================================================
+        // DOM References
+        // ============================================================
+        const video = document.getElementById('videoPlayer');
+        const channelGrid = document.getElementById('channelGrid');
+        const channelNameOverlay = document.getElementById('channel-name-overlay');
+        const categoryTabs = document.getElementById('category-tabs');
+        const loading = document.getElementById('loading');
+
+        let currentChannelIndex = 0;
+        let currentCategory = 'ทั้งหมด';
+
+        // ============================================================
+        // ดึงหมวดหมู่ทั้งหมด (ไม่ซ้ำ)
+        // ============================================================
+        function getCategories() {
+            const cats = new Set();
+            cats.add('ทั้งหมด');
+            channels.forEach(ch => {
+                if (ch.category) cats.add(ch.category);
+            });
+            return Array.from(cats);
+        }
+
+        // ============================================================
+        // สร้างปุ่มหมวดหมู่
+        // ============================================================
+        function renderCategories() {
+            const categories = getCategories();
+            categoryTabs.innerHTML = '';
+            categories.forEach((cat, idx) => {
+                const tab = document.createElement('div');
+                tab.className = 'category-tab';
+                if (idx === 0) tab.classList.add('active');
+                tab.textContent = cat;
+                tab.dataset.category = cat;
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentCategory = cat;
+                    renderChannelsByCategory(cat);
+                });
+                categoryTabs.appendChild(tab);
+            });
+        }
+
+        // ============================================================
+        // แสดงช่องตามหมวดหมู่
+        // ============================================================
+        function renderChannelsByCategory(category) {
+            const filtered = category === 'ทั้งหมด' 
+                ? channels 
+                : channels.filter(ch => ch.category === category);
+
+            channelGrid.innerHTML = '';
+            if (filtered.length === 0) {
+                channelGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#666;">ไม่มีช่องในหมวดนี้</div>';
+                return;
+            }
+
+            filtered.forEach((ch) => {
+                const item = document.createElement('div');
+                item.className = 'channel-item';
+                const realIndex = channels.indexOf(ch);
+                if (realIndex === currentChannelIndex) item.classList.add('active');
+                item.dataset.index = realIndex;
+
+                const img = document.createElement('img');
+                img.src = ch.logo;
+                img.alt = ch.name;
+                img.loading = 'lazy';
+                img.onerror = function() {
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"%3E%3Crect width="24" height="24" rx="4"%3E%3C/rect%3E%3Ctext x="12" y="16" text-anchor="middle" font-size="12" fill="%23aaa" font-family="sans-serif"%3ETV%3C/text%3E%3C/svg%3E';
+                };
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'ch-name';
+                nameSpan.textContent = ch.name;
+
+                item.appendChild(img);
+                item.appendChild(nameSpan);
+
+                item.addEventListener('click', () => {
+                    playChannel(realIndex);
+                });
+
+                channelGrid.appendChild(item);
+            });
+        }
+
+        // ============================================================
+        // เล่นช่อง
+        // ============================================================
+        function playChannel(index) {
+            if (index < 0 || index >= channels.length) return;
+
+            const channel = channels[index];
+            currentChannelIndex = index;
+
+            // อัปเดต active class ใน grid
+            document.querySelectorAll('.channel-item').forEach((el) => {
+                const idx = parseInt(el.dataset.index);
+                el.classList.toggle('active', idx === index);
+            });
+
+            // แสดงชื่อช่อง
+            channelNameOverlay.textContent = `📺 ${channel.name}`;
+
+            // โหลดวิดีโอ
+            loading.classList.remove('hidden');
+            video.src = channel.url;
+            video.load();
+
+            video.oncanplay = function() {
+                loading.classList.add('hidden');
+                video.play().catch(e => {
+                    console.warn('Auto-play blocked:', e);
+                    loading.classList.add('hidden');
+                });
+            };
+
+            video.onerror = function() {
+                loading.classList.add('hidden');
+                console.error('Cannot load video:', channel.url);
+            };
+        }
+
+        // ============================================================
+        // เล่นช่องแรก
+        // ============================================================
+        function playFirstChannel() {
+            if (channels.length > 0) {
+                playChannel(0);
+            }
+        }
+
+        // ============================================================
+        // เริ่มต้น
+        // ============================================================
+        renderCategories();
+        renderChannelsByCategory('ทั้งหมด');
+
+        // ✅ เล่นช่องแรกอัตโนมัติเมื่อโหลดหน้า
+        playFirstChannel();
+
+        video.onloadedmetadata = function() {
+            loading.classList.add('hidden');
+        };
+
+        video.onended = function() {
+            const nextIndex = (currentChannelIndex + 1) % channels.length;
+            playChannel(nextIndex);
+        };
+
+        video.onerror = function() {
+            loading.classList.add('hidden');
+            const nextIndex = (currentChannelIndex + 1) % channels.length;
+            if (nextIndex !== currentChannelIndex) {
+                playChannel(nextIndex);
+            }
+        };
+
+        console.log(`✅ โหลดช่องทั้งหมด ${channels.length} ช่อง`);
+        console.log(`📂 หมวดหมู่: ${getCategories().join(', ')}`);
+    </script>
+
+
+<div id="m3u8Layer" style="display: inline;"><!-- overlay.html -->
+<div id="m3u8OverlayDiv" class="overlayDiv" style="display: inline; min-width: 12px; right: 0px;"> 
+    <span id="titleSpan" class="titleSpan" style="padding-left:6px;">
+        <a id="titleM3u8Link" target="_self" href="https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8" class="m3u8Link" title="https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8">
+            <span id="titleText">m3u8</span>
+            <span style="padding-right:3px;">[<span id="tabM3u8Count">1061</span>]</span></a></span>
+    
+    <span id="m3u8LinkSpan" style="display:none;" title="Show First / Last m3u8 video link (Alt Shift F / L)">
+        <select id="showFirstLast" class="overlayDD">
+            <option class="overlayDD" value="first" selected="">First</option>
+            <option class="overlayDD" value="last">Last</option>
+        </select>&nbsp;
+        <a id="m3u8Link" target="_self" href="https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8" class="m3u8Link" title="Click or right click to open the m3u8 URL (Alt Enter)">
+            <span id="m3u8LinkText" class="m3u8Link">https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8</span>
+        </a>&nbsp;
+    </span>
+    <span class="buttonsSpan noWrap" style="white-space:nowrap;">
+        <span id="m3u8HideSpan" style="margin-left:2px;margin-right:0px;">
+            <span id="m3u8HideButton" class="olButton" title="Shrink the overlay to the upper right corner (Alt &lt;)" style="display: inline;">
+                &nbsp;&nbsp;&nbsp;&lt;&nbsp;&nbsp;
+            </span>
+        </span>
+        <span id="m3u8ExpandOverlay" class="olButton noWrap" title="Expand to show full overlay details (Alt +)" style="display: inline;">
+            &nbsp;&nbsp;&nbsp;+&nbsp;&nbsp;
+        </span>
+        <span id="m3u8CopyButton" class="olButton noWrap" title="Copy the m3u8 URL to the clipboard (Alt C)">
+            &nbsp;&nbsp;Copy&nbsp;
+        </span>
+<!--
+        <span id="m3u8PlayButton" class="olButton noWrap"
+            title="Play the m3u8 video in the current tab (Alt P)">
+            &nbsp;&nbsp;Play&nbsp;
+        </span>
+-->
+        <span id="m3u8PlayButton" class="olButton noWrap" title="Play the m3u8 video in the current tab (Alt P, can use Ctrl or Shift for new tab/window)">
+            <a id="m3u8PlayLink" href="chrome-extension://akkncdpkjlfanomlnpmmolafofpnpjgn/player/player.html?site=https://cambodiatv.netlify.app/#https://cdn.pdtvhd.com/Sports/streams/PDTVHDSports.m3u8" class="cssbutton" style="color:white;text-decoration:none;">
+                &nbsp;&nbsp;Play&nbsp;
+            </a>
+        </span>
+        <span id="m3u8CloseButton" class="olButton hoverRed noWrap" title="Close the m3u8 overlay for this page (Alt X)">
+            &nbsp;&nbsp;X&nbsp;&nbsp;</span><span id="m3u8HideRightButton" class="olButton noWrap" title="Shrink the overlay to the upper right corner (Alt &gt;)" style="display: none;">
+            &nbsp;&nbsp;&gt;&nbsp;&nbsp;&nbsp;
+        </span>
+    </span><br>
+</div>
+</div></body></html>
